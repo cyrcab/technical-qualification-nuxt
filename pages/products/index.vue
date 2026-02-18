@@ -11,10 +11,27 @@
     </div>
 
     <div v-else>
-      <section class="filters-bar">
+        <section section class="filters-bar">
+          <div class="filter-container">
+            <span @click="filterBy('price')"> Par Prix </span>
+            <span @click="filterBy('category')"> Par catégorie </span>
+            <span @click="filterBy('inStock')"> En Stock </span>
+          </div>
+          <div class="sort-container">
+            <span @click="sortBy('price')"> Price </span>
+            <span @click="sortBy('rating')"> Rating </span>
+          </div>  
+    
         </section>
 
       <div class="products-grid">
+        <div v-for="{ name, category, price, inStock, rating } in filteredProducts" class="product">
+          <span>Nom :  {{ name }}</span> - 
+          <span>Category {{ category }}</span>
+          <span>Prix :  {{ price }}</span>
+          <span> En stock :  {{ inStock  ? 'Oui' : 'Non' }}</span>
+          <span> Note : {{ rating }}</span>
+        </div>
         </div>
     </div>
   </div>
@@ -22,11 +39,32 @@
 
 <script setup lang="ts">
 import type { Product } from '~/types/product'
+import { useProductFilters } from '~/composables/useProductFilters'
+
+const route = useRoute()
+const router = useRouter()
+
+const filterOptions = ['search', 'category', 'inStock', 'price'];
+function filterBy(option: string) {
+
+  if(filterOptions.includes(option)) {
+    const val =  route.query[option] && route.query[option] == '1'  ? 0 : 1
+    router.replace({ query: {...route.query, [option]: val } })
+  }
+}
 
 /**
  * DATA FETCHING
  */
-const { data: products, pending, error } = await useFetch<Product[]>('/api/products')
+
+ const { data: products, pending, error } = await useFetch<Product[]>('/api/products')
+  console.log(products.value)
+  const {filteredProducts}  = useProductFilters(products);
+  console.log("sa", filteredProducts.value)
+
+
+
+
 
 /**
  * FILTERING LOGIC
