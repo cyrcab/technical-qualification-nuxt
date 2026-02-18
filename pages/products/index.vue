@@ -12,26 +12,49 @@
 
     <div v-else>
         <section section class="filters-bar">
-          <div class="filter-container">
-            <span @click="filterBy('price')"> Par Prix </span>
-            <span @click="filterBy('category')"> Par catégorie </span>
-            <span @click="filterBy('inStock')"> En Stock </span>
+          <div class="filter-group">
+            <label for="search"> Search </label>
+            <input v-model="search" id="search">
+          </div>  
+          <div class="filter-group">
+              
+              <label for="category" class="categories">
+                Par catégorie
+              </label>
+              <select v-model="category" name="category" id="category">
+                <option value=""> Tout </option>
+                <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+              </select>
+            
           </div>
-          <div class="sort-container">
-            <span @click="sortBy('price')"> Price </span>
-            <span @click="sortBy('rating')"> Rating </span>
+          <div class="filter-group">
+            <label for="sortBy" class="categories">
+                Trier par
+              </label>
+              <select v-model="sortBy" name="category" id="sortBy">
+                <option value="price-asc">Prix Croissant</option>
+                <option value="price-desc">Prix Décroissant</option>
+                <option value="rating-asc">Note Croissant</option>
+                <option value="rating-desc">Note Décroissant</option>
+              </select>
+          </div> 
+          <div class="filter-group">
+            <label for="inStock"> En Stock </label>
+            <input v-model="inStockOnly" type="checkbox" id="inStock">
           </div>  
     
         </section>
 
       <div class="products-grid">
-        <div v-for="{ name, category, price, inStock, rating } in filteredProducts" class="product">
-          <span>Nom :  {{ name }}</span> - 
-          <span>Category {{ category }}</span>
-          <span>Prix :  {{ price }}</span>
-          <span> En stock :  {{ inStock  ? 'Oui' : 'Non' }}</span>
-          <span> Note : {{ rating }}</span>
-        </div>
+        <NuxtLink v-for="prd in filteredProducts" class="product"
+          :to="{name: 'products-id', params: { id: prd.id }}"
+          tag="div">
+          <p>Nom :  {{ prd.name }}</p>
+          <p>Category : {{ prd.category }}</p>
+          <p>Prix :  {{ prd.price }}</p>
+          <p> En stock :  {{ prd.inStock  ? 'Oui' : 'Non' }}</p>
+          <p> Note : {{ prd.rating }}</p>
+        </NuxtLink>
         </div>
     </div>
   </div>
@@ -41,41 +64,30 @@
 import type { Product } from '~/types/product'
 import { useProductFilters } from '~/composables/useProductFilters'
 
-const route = useRoute()
-const router = useRouter()
-
-const filterOptions = ['search', 'category', 'inStock', 'price'];
-function filterBy(option: string) {
-
-  if(filterOptions.includes(option)) {
-    const val =  route.query[option] && route.query[option] == '1'  ? 0 : 1
-    router.replace({ query: {...route.query, [option]: val } })
-  }
-}
 
 /**
  * DATA FETCHING
  */
 
- const { data: products, pending, error } = await useFetch<Product[]>('/api/products')
-  console.log(products.value)
-  const {filteredProducts}  = useProductFilters(products);
-  console.log("sa", filteredProducts.value)
-
-
-
-
+const { data: products, pending, error } = await useFetch<Product[]>('/api/products')
 
 /**
  * FILTERING LOGIC
  */
-// const { ... } = useProductFilters(...)
+ const {
+    search,
+    category,
+    inStockOnly,
+    sortBy,
+    filteredProducts }  = useProductFilters(products);
 
 /**
  * COMPUTED PROPERTIES
  */
+
 const categories = computed(() => {
-  return []
+  const arr = products.value?.map(prd => prd.category);
+  return [...new Set(arr)]
 })
 </script>
 

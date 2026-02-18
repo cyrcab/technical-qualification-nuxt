@@ -1,9 +1,8 @@
 import type { Product, SortOption } from '~/types/product'
-
-export const DEF_SORT: SortOption = 'price-asc';
+import { SORT_OPTIONS, DEF_SORT } from '~/types/product';
 
 function getSortBy(val: any) : SortOption {
-   return val || DEF_SORT
+   return val && SORT_OPTIONS.includes(val) ? val : DEF_SORT
 }
 
 export const useProductFilters = (products: Ref<Product[]>) => {
@@ -16,10 +15,11 @@ export const useProductFilters = (products: Ref<Product[]>) => {
    * Senior Level: Try to initialize them from 'route.query' to maintain 
    * state on page refresh (Deep Linking).
    */
-  const search = ref(route.query.search || '')
-  const category = ref(route.query.category || '')
-  const inStockOnly = ref(route.query.inStockOnly || 0)
-  const sortBy = ref<SortOption>(getSortBy(route.query.sortBy as string)) //TODO fix ts sortoption vs string
+
+  const search = ref(route.query.search as string || '')
+  const category = ref(route.query.category as string || '')
+  const inStockOnly = ref(!!route.query.inStockOnly || false)
+  const sortBy = ref<SortOption>(getSortBy(route.query.sortBy as string))
 
   /**
    * 2. FILTERING & SORTING LOGIC
@@ -31,21 +31,21 @@ export const useProductFilters = (products: Ref<Product[]>) => {
    * * Note: Ensure you don't mutate the original source.
    */
 
-  function normalize(str : string) {
-    return str;
-  }
   const filteredProducts = computed(() => {
 
-    let filtered = products.value;
+    let res = products.value;
 
-    //if(search.value) filtered = filtered.filter(({name}: Product) => normalize(name) === normalize(search.value))
-    //if(category.value) filtered = filtered.filter(({category: cty}: Product) => normalize(cty) === normalize(category.value))
+    if(search.value) {
+      const reg = new RegExp(search.value,'i')
+      res = res.filter(({ name }: Product) => reg.test(name))
+    }
+    if(category.value) {
+      res = res.filter(({ category: cty }: Product) => cty === category.value)
+    }
 
-    if(inStockOnly.value == true) filtered = filtered.filter((prd: Product) => prd.inStock === true)
+    if(inStockOnly.value === true) res = res.filter(({ inStock }: Product) => inStock === true)
 
-      console.log("sa 2", filtered);
-
-    return [...filtered].sort((a: Product, b: Product) => {
+    return [...res].sort((a: Product, b: Product) => {
       switch(sortBy.value) {
         case 'price-asc':
           return a.price - b.price
@@ -67,11 +67,15 @@ export const useProductFilters = (products: Ref<Product[]>) => {
    * Senior Level: Use 'router.replace' to update the URL without 
    * polluting the browser history. Handle empty values properly.
    */
-  watch(route, () => {
-    search.value = route.query.search || '';
-    category.value = route.query.category || '';
-    inStockOnly.value = route.query.inStock || 0;
-    sortBy.value = getSortBy(route.query.sortBy) || DEF_SORT;
+  watch([search, category, inStockOnly, sortBy], () => {
+
+    const query = {
+      search: search.value || undefined,
+      category: category.value || undefined,
+      inStockOnly: inStockOnly.value ? 'true' : undefined,
+      sortBy: sortBy.value || undefined
+    }
+    router.replace({ query })
   })
 
   return {

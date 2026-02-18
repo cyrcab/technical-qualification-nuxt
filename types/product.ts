@@ -7,13 +7,13 @@ export interface Product  {
     rating: number
   }
 
+export type SortOption = "price-asc" | "price-desc" | "rating-asc" | "rating-desc";
 
-export const SORT_OPTIONS = [
+export const SORT_OPTIONS: SortOption[] = [
   "price-asc",
   "price-desc",
   "rating-asc",
   "rating-desc",
-] as const;
-  
-export type SortOption = typeof SORT_OPTIONS[number];
+];
+export const DEF_SORT: SortOption = "price-asc";
 
