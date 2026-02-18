@@ -1,11 +1,17 @@
 <template>
   <div class="product-detail">
     <div v-if="product" class="product-card-large">
+      <NuxtLink class="back-link" :to="{ name: 'products' }">Back</NuxtLink>
+
       <div class="product-header">
         <h1>{{ product.name }}</h1>
         </div>
 
       <div class="product-grid-info">
+          <p>Category : {{ product.category }}</p>
+          <p>Prix :  {{ product.price }}</p>
+          <p class="status-badge"> En stock :  {{ product.inStock  ? 'Oui' : 'Non' }}</p>
+          <p> Note : {{ product.rating }}</p>
         </div>
       
       <pre class="debug-data">{{ product }}</pre>
@@ -28,16 +34,25 @@ const route = useRoute()
  */
 const { data: products, pending } = await useFetch<Product[]>('/api/products')
 
+
 /**
  * PRODUCT SELECTION & ERROR HANDLING
  * TODO:
  * 1. Find the specific product matching the ID.
  * 2. If the product does not exist, trigger a Nuxt 404 error page.
  */
-const product = computed(() => {
-  // Candidate implementation
-  return null
-})
+  function getProduct(id: string | number) {
+    return products?.value?.find((prd: Product) => prd.id == id)
+
+  }
+  const exist = getProduct(route.params.id as string)
+
+  if(!exist) {
+    throw createError({ status: 404, statusText: 'Ce produit n\'existe pas' })
+  }
+  const product = computed(() => {
+    return getProduct(route.params.id as string)
+  })
 </script>
 
 <style scoped>

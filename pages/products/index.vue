@@ -11,10 +11,50 @@
     </div>
 
     <div v-else>
-      <section class="filters-bar">
+        <section section class="filters-bar">
+          <div class="filter-group">
+            <label for="search"> Search </label>
+            <input v-model="search" id="search">
+          </div>  
+          <div class="filter-group">
+              
+              <label for="category" class="categories">
+                Par catégorie
+              </label>
+              <select v-model="category" name="category" id="category">
+                <option value=""> Tout </option>
+                <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+              </select>
+            
+          </div>
+          <div class="filter-group">
+            <label for="sortBy" class="categories">
+                Trier par
+              </label>
+              <select v-model="sortBy" name="category" id="sortBy">
+                <option value="price-asc">Prix Croissant</option>
+                <option value="price-desc">Prix Décroissant</option>
+                <option value="rating-asc">Note Croissant</option>
+                <option value="rating-desc">Note Décroissant</option>
+              </select>
+          </div> 
+          <div class="filter-group">
+            <label for="inStock"> En Stock </label>
+            <input v-model="inStockOnly" type="checkbox" id="inStock">
+          </div>  
+    
         </section>
 
       <div class="products-grid">
+        <NuxtLink v-for="prd in filteredProducts" class="product"
+          :to="{name: 'products-id', params: { id: prd.id }}"
+          tag="div">
+          <p>Nom :  {{ prd.name }}</p>
+          <p>Category : {{ prd.category }}</p>
+          <p>Prix :  {{ prd.price }}</p>
+          <p> En stock :  {{ prd.inStock  ? 'Oui' : 'Non' }}</p>
+          <p> Note : {{ prd.rating }}</p>
+        </NuxtLink>
         </div>
     </div>
   </div>
@@ -22,22 +62,32 @@
 
 <script setup lang="ts">
 import type { Product } from '~/types/product'
+import { useProductFilters } from '~/composables/useProductFilters'
+
 
 /**
  * DATA FETCHING
  */
+
 const { data: products, pending, error } = await useFetch<Product[]>('/api/products')
 
 /**
  * FILTERING LOGIC
  */
-// const { ... } = useProductFilters(...)
+ const {
+    search,
+    category,
+    inStockOnly,
+    sortBy,
+    filteredProducts }  = useProductFilters(products);
 
 /**
  * COMPUTED PROPERTIES
  */
+
 const categories = computed(() => {
-  return []
+  const arr = products.value?.map(prd => prd.category);
+  return [...new Set(arr)]
 })
 </script>
 
